@@ -1,72 +1,50 @@
 buildscript {
     repositories {
         mavenLocal()
-        maven { url = 'http://files.minecraftforge.net/maven' }
+        maven { url = 'https://files.minecraftforge.net/maven' }
         jcenter()
         mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:3.+'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:3.0.143'
     }
 }
 
 apply plugin: 'eclipse'
-apply plugin: 'net.minecraftforge.gradle.forgedev.patcher'
 
-configurations {
-    shade
-    compile.extendsFrom shade
-}
-
-group = 'me.yourname'
+group = 'Modern-Minecraft-Decompiler'
 version = '1.0.0'
 
-ext {
-    minecraft_version = '1.15'
-    mcp_version = '20191210.153145'
-    mappings_channel = 'snapshot'
-    mappings_version = '20191210-1.14.3'
-}
-
-repositories {
-    mavenCentral()
-
-}
-
-dependencies {
-    shade 'net.minecraftforge:forgespi:1.1.+'
-//    Use the shade to add the lib to the jar
-//    or use compile if you want to load the lib from the version.json
-//    from a maven repo
-//    shade 'package-here'
-//    compile 'package-here'
-}
-
 project(':mcp') {
-    apply plugin: 'net.minecraftforge.gradle.forgedev.mcp'
+    apply plugin: 'net.minecraftforge.gradle.mcp'
     mcp {
-        config = minecraft_version + '-' + mcp_version
-        pipeline = 'joined'
+        //From MinecraftForge build.gradle
+        config = '1.15.1-20191217.105819'
+        pipeline = 'client'
     }
 }
 
 evaluationDependsOn(':mcp')
-
+apply plugin: 'eclipse'
+apply plugin: 'net.minecraftforge.gradle.patcher'
+repositories {
+    mavenLocal()
+    maven { url = 'https://files.minecraftforge.net/maven' }
+    jcenter()
+    mavenCentral()
+}
 patcher {
     parent = project(':mcp')
     patchedSrc = file('src/main/java')
-    mappings channel: mappings_channel, version: mappings_version
-    mcVersion = '1.15'
-}
-
-jar {
-    configurations.shade.each { dep ->
-        from(project.zipTree(dep)) {
-            exclude 'META-INF', 'META-INF/**'
-        }
+    mappings channel: 'snapshot', version: '20200117-1.14.3'
+    mcVersion = '1.15.1'
+    repositories {
+      mavenLocal()
+      maven { url = 'https://files.minecraftforge.net/maven' }
+      jcenter()
+      mavenCentral()
     }
 }
-
 task runclient(type: JavaExec) {
     group = "MCP"
     description = "Runs the client"
@@ -74,11 +52,7 @@ task runclient(type: JavaExec) {
         mkdir 'runclient'
     }
     classpath sourceSets.main.runtimeClasspath
-    args '--gameDir', '.'
-    args '--version', minecraft_version
-    args '--assetsDir', downloadAssets.output
-    args '--assetIndex', '{asset_index}'
-    args '--accessToken', '0'
+    args = ['--accessToken', '0', '--version', '1.15.1', '--assetsDir', downloadAssets.output, '--assetIndex', '1.15']
     main 'net.minecraft.client.main.Main'
     workingDir 'runclient'
 }
